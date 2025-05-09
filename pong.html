@@ -28,7 +28,7 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding-bottom: 60px; /* Miejsce na stopkę i licznik */
+            padding-bottom: 80px; /* Zwiększony padding na stopkę, wersję i licznik */
         }
 
         /* Menu Startowe */
@@ -161,13 +161,25 @@
             box-shadow: 0 2px #666;
         }
 
-        /* Stopka i licznik */
+        /* Stopka, wersja i licznik */
         footer {
             position: fixed;
             bottom: 10px;
             left: 10px;
             font-size: 0.7em;
             color: #aaa;
+            z-index: 5; /* Aby było pod canvas, jeśli canvas jest duży */
+        }
+        #game-version {
+            position: fixed;
+            bottom: 30px; /* Wyżej niż licznik */
+            right: 10px;
+            font-size: 0.6em;
+            color: #888;
+            background-color: rgba(0,0,0,0.4);
+            padding: 3px 6px;
+            border-radius: 3px;
+            z-index: 5;
         }
         #visitor-counter {
             position: fixed;
@@ -178,6 +190,7 @@
             background-color: rgba(0,0,0,0.5);
             padding: 5px 8px;
             border-radius: 5px;
+            z-index: 5;
         }
 
         /* Dostosowanie dla mniejszych ekranów */
@@ -190,7 +203,8 @@
              #message-box { font-size: 1.1em; padding: 20px;}
              #message-box button { font-size: 0.6em; padding: 10px 18px;}
              #controls-info { font-size: 0.7em; }
-             footer, #visitor-counter { font-size: 0.6em; }
+             footer, #visitor-counter, #game-version { font-size: 0.6em; }
+             #game-version { bottom: 25px; }
         }
          @media (max-width: 600px) {
              #start-menu { padding: 25px; }
@@ -202,8 +216,9 @@
              #message-box { font-size: 1em; padding: 15px;}
              #message-box button { font-size: 0.5em; padding: 8px 15px;}
              #controls-info { font-size: 0.6em; }
-             footer, #visitor-counter { font-size: 0.5em; bottom: 5px; left: 5px; right: 5px; text-align: center;}
-             #visitor-counter { text-align: right; }
+             footer { font-size: 0.5em; bottom: 5px; left: 5px; right: 5px; text-align: center;}
+             #game-version { font-size: 0.4em; bottom: 20px; right: 5px; text-align: right;}
+             #visitor-counter { font-size: 0.5em; bottom: 5px; right: 5px; text-align: right;}
         }
     </style>
 </head>
@@ -237,28 +252,30 @@
     <footer>
         &copy; <span id="current-year"></span> pong.com.pl - Wszelkie prawa zastrzeżone.
     </footer>
+    <div id="game-version">Wersja: <span id="version-number"></span></div>
     <div id="visitor-counter">Odwiedziny: <span id="visits">Ładowanie...</span></div>
 
     <script>
+        // --- WERSJA GRY ---
+        const GAME_VERSION = "1.0.0";
+        document.getElementById('version-number').textContent = GAME_VERSION;
+
         // --- Ustawienie roku w stopce ---
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
         // --- Licznik odwiedzin (serwerowy PHP) ---
         const visitsSpan = document.getElementById('visits');
-        // Funkcja do pobierania i aktualizowania licznika
         function updateVisitorCount() {
-            fetch('counter.php') // Wywołaj skrypt PHP
+            fetch('counter.php')
                 .then(response => {
                     if (!response.ok) {
-                        // Jeśli odpowiedź nie jest OK, spróbuj odczytać tekst błędu, jeśli jest
                         return response.text().then(text => {
                             throw new Error('Network response was not ok: ' + response.status + ' ' + response.statusText + '. Server said: ' + text);
                         });
                     }
-                    return response.text(); // Oczekujemy tekstu (liczby)
+                    return response.text();
                 })
                 .then(count => {
-                    // Sprawdź, czy odpowiedź to faktycznie liczba
                     if (!isNaN(parseInt(count))) {
                         visitsSpan.textContent = count;
                     } else {
@@ -271,7 +288,6 @@
                     visitsSpan.textContent = 'Błąd';
                 });
         }
-        // Wywołaj funkcję przy ładowaniu strony
         updateVisitorCount();
 
 
@@ -303,11 +319,11 @@
         let gameRunning = false;
         let animationFrameId = null;
 
-        // --- Parametry Trudności ---
+        // --- ZMIENIONE Parametry Trudności ---
         const difficultySettings = {
-            easy:   { computerSpeed: 3, ballSpeed: 4, ballAcceleration: 0.05 },
-            normal: { computerSpeed: 4, ballSpeed: 5, ballAcceleration: 0.1 },
-            hard:   { computerSpeed: 6, ballSpeed: 6, ballAcceleration: 0.15 }
+            easy:   { computerMaxSpeed: 2.8, ballSpeed: 4.5, ballAcceleration: 0.06, aiErrorRange: 45 },
+            normal: { computerMaxSpeed: 3.8, ballSpeed: 5.0, ballAcceleration: 0.1,  aiErrorRange: 25 },
+            hard:   { computerMaxSpeed: 5.0, ballSpeed: 5.8, ballAcceleration: 0.15, aiErrorRange: 10 }
         };
 
         // --- Elementy Gry ---
@@ -342,10 +358,10 @@
 
         function resetBall() {
             if (!ball) return;
-            const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
+            const currentDifficultyParams = difficultySettings[difficultyLevel] || difficultySettings.normal;
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.speed = currentDifficulty.ballSpeed * scaleFactor;
+            ball.speed = currentDifficultyParams.ballSpeed * scaleFactor;
             let angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
             let directionX = (Math.random() > 0.5 ? 1 : -1);
             let directionY = (Math.random() > 0.5 ? 1 : -1);
@@ -397,32 +413,42 @@
             messageBox.style.display = 'none';
             removeGameEventListeners();
             player1 = null; player2 = null; ball = null; gameMode = null;
-        }
+         }
 
-        // --- Logika Gry ---
         function collision(b, p) {
-            if (!b || !p) return false;
+             if (!b || !p) return false;
             const p_top = p.y; const p_bottom = p.y + p.height;
             const p_left = p.x; const p_right = p.x + p.width;
             const b_top = b.y - b.radius; const b_bottom = b.y + b.radius;
             const b_left = b.x - b.radius; const b_right = b.x + b.radius;
             return b_right > p_left && b_left < p_right && b_bottom > p_top && b_top < p_bottom;
-         }
+        }
 
         function update() {
             if (!gameRunning || !player1 || !player2 || !ball) return;
 
             if (gameMode === 'single') {
-                let targetY = ball.y - player2.height / 2;
+                const currentDifficultyParams = difficultySettings[difficultyLevel];
+                const aiMaxSpeed = currentDifficultyParams.computerMaxSpeed * scaleFactor;
+                let aimPointOnPaddle = player2.height / 2;
+                aimPointOnPaddle += (Math.random() - 0.5) * (currentDifficultyParams.aiErrorRange * scaleFactor);
+                aimPointOnPaddle = Math.max(ball.radius * scaleFactor * 0.5, Math.min(player2.height - (ball.radius * scaleFactor * 0.5), aimPointOnPaddle));
+                let targetY = ball.y - aimPointOnPaddle;
                 let dy = targetY - player2.y;
-                let currentComputerSpeed = player2.speed;
-                if (Math.abs(ball.x - player2.x) > canvas.width * 0.65) {
-                    currentComputerSpeed *= 0.75;
-                }
-                if (Math.abs(dy) > currentComputerSpeed) {
-                    player2.y += Math.sign(dy) * currentComputerSpeed;
+                let effectiveAiSpeed = aiMaxSpeed;
+                if (ball.velocityX < 0) {
+                    effectiveAiSpeed *= 0.6;
                 } else {
-                    player2.y = targetY;
+                    if (Math.abs(ball.x - player2.x) > canvas.width * 0.6) {
+                        effectiveAiSpeed *= 0.7;
+                    } else if (Math.abs(ball.x - player2.x) > canvas.width * 0.3) {
+                        effectiveAiSpeed *= 0.9;
+                    }
+                }
+                if (Math.abs(dy) > effectiveAiSpeed * 0.2) {
+                    player2.y += Math.sign(dy) * effectiveAiSpeed;
+                } else if (Math.abs(dy) > 1) {
+                    player2.y += dy * 0.4;
                 }
                 player2.y = Math.max(0, Math.min(canvas.height - player2.height, player2.y));
             } else if (gameMode === 'twoPlayer') {
@@ -441,7 +467,9 @@
 
             if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.velocityY *= -1; }
             else if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.velocityY *= -1; }
-            if (Math.abs(ball.velocityY) < 0.1 * scaleFactor) { ball.velocityY += (Math.random() - 0.5) * 0.5 * scaleFactor; }
+            if (Math.abs(ball.velocityY) < 0.1 * scaleFactor && ball.velocityY !== 0) {
+                ball.velocityY = (Math.sign(ball.velocityY) || (Math.random() > 0.5 ? 1: -1)) * 0.2 * scaleFactor;
+            }
 
             let pointScored = false;
             if (ball.x + ball.radius > canvas.width) { player1.score++; pointScored = true; }
@@ -459,19 +487,20 @@
             let paddle = (ball.x < canvas.width / 2) ? player1 : player2;
             if (collision(ball, paddle)) {
                 let collidePoint = (ball.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
-                const maxAngleRatio = 0.8;
+                const maxAngleRatio = 0.85;
                 collidePoint = Math.max(-maxAngleRatio, Math.min(maxAngleRatio, collidePoint));
                 let angleRad = collidePoint * (Math.PI / 3);
                 let direction = (ball.x < canvas.width / 2) ? 1 : -1;
                 ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                 ball.velocityY = ball.speed * Math.sin(angleRad);
-                const minYVelocity = 0.5 * scaleFactor;
+                const minYVelocity = 0.3 * scaleFactor;
                 if (Math.abs(ball.velocityY) < minYVelocity) {
-                    ball.velocityY = (Math.sign(ball.velocityY) || (Math.random() > 0.5 ? 1 : -1)) * minYVelocity;
+                    ball.velocityY = (ball.velocityY >= 0 ? 1 : -1) * minYVelocity;
+                    if (ball.velocityY === 0) ball.velocityY = (Math.random() > 0.5 ? 1 : -1) * minYVelocity;
                 }
                 ball.x += ball.velocityX * 0.1;
-                 const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
-                 ball.speed += currentDifficulty.ballAcceleration * scaleFactor;
+                 const currentDifficultyParams = difficultySettings[difficultyLevel] || difficultySettings.normal;
+                 ball.speed += currentDifficultyParams.ballAcceleration * scaleFactor;
             }
         }
 
@@ -494,7 +523,6 @@
             animationFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // --- Obsługa Inputu ---
         function movePlayer1Paddle(evt) {
              if (!player1 || gameMode !== 'single') return;
             let rect = canvas.getBoundingClientRect();
@@ -516,7 +544,7 @@
             }
          }
         function handleKeyUp(event) {
-             if (gameMode !== 'twoPlayer') return;
+            if (gameMode !== 'twoPlayer') return;
             switch(event.key) {
                 case 'w': case 'W': keysPressed.w = false; break;
                 case 's': case 'S': keysPressed.s = false; break;
@@ -567,9 +595,9 @@
             const scaledPaddleHeight = basePaddleHeight * scaleFactor;
             const scaledBallRadius = baseBallRadius * scaleFactor;
 
-            const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
-            const scaledComputerSpeed = currentDifficulty.computerSpeed * scaleFactor;
-            const scaledBallSpeed = currentDifficulty.ballSpeed * scaleFactor;
+            const currentDifficultyParams = difficultySettings[difficultyLevel] || difficultySettings.normal;
+            const scaledComputerSpeed = currentDifficultyParams.computerMaxSpeed * scaleFactor;
+            const scaledBallSpeed = currentDifficultyParams.ballSpeed * scaleFactor;
 
             const score1 = player1 ? player1.score : 0;
             const score2 = player2 ? player2.score : 0;
@@ -592,10 +620,16 @@
                  ball.y = (ball.y / oldCanvasHeight) * canvas.height;
                  ball.radius = scaledBallRadius;
                  const currentAbsSpeed = Math.sqrt(ball.velocityX**2 + ball.velocityY**2);
-                 const speedRatio = (scaledBallSpeed * (ball.speed / (currentDifficulty.ballSpeed * (ball.scaleFactor || 1)))) / (currentAbsSpeed || 1);
-                 ball.speed *= speedRatio;
-                 ball.velocityX *= speedRatio;
-                 ball.velocityY *= speedRatio;
+                 const newBaseSpeed = currentDifficultyParams.ballSpeed * scaleFactor;
+                 const speedRatio = ball.speed / (currentDifficultyParams.ballSpeed * (ball.scaleFactor || 1));
+
+                 ball.speed = newBaseSpeed * speedRatio;
+                 if(currentAbsSpeed > 0) {
+                    ball.velocityX = (ball.velocityX / currentAbsSpeed) * ball.speed;
+                    ball.velocityY = (ball.velocityY / currentAbsSpeed) * ball.speed;
+                 } else {
+                    resetBall();
+                 }
                  ball.scaleFactor = scaleFactor;
             } else {
                  ball = {
@@ -625,7 +659,6 @@
             if (!animationFrameId) { gameLoop(); }
         }
 
-        // --- Nasłuchiwanie Zdarzeń Menu ---
         onePlayerButton.addEventListener('click', () => {
             difficultySelection.style.display = 'block';
             onePlayerButton.style.display = 'none';
@@ -647,7 +680,6 @@
         restartButton.addEventListener('click', restartGame);
         menuButton.addEventListener('click', goToMenu);
 
-        // Stan początkowy
         gameContainer.style.display = 'none';
         startMenu.style.display = 'block';
         difficultySelection.style.display = 'none';
