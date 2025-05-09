@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gra Pong Online - Klasyczna Rozgrywka</title>
+    <meta name="keywords" content="pong, gra pong, gra online, klasyczny pong, retro gra, gra zręcznościowa, ping pong, gra przeglądarkowa">
+    <meta name="description" content="Zagraj w klasyczną grę Pong online! Zmierz się z komputerem na różnych poziomach trudności lub zagraj z drugim graczem. Prosta i wciągająca rozgrywka retro.">
+    <meta name="author" content="pong.com.pl">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #202020;
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; /* Dla pozycjonowania licznika i stopki */
+        }
+        /* Kontener główny */
+        #main-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding-bottom: 60px; /* Miejsce na stopkę i licznik */
+        }
+
+        /* Menu Startowe */
+        #start-menu {
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #fff;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+            min-width: 300px;
+        }
+        #start-menu h1 {
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .menu-button {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            margin: 10px auto;
+            cursor: pointer;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s, transform 0.1s;
+            box-shadow: 0 5px #999;
+            display: block;
+            width: 250px;
+        }
+        .menu-button:hover {
+            background-color: #ddd;
+        }
+        .menu-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px #666;
+        }
+        #difficulty-selection {
+            margin-top: 20px;
+            display: none;
+        }
+         #difficulty-selection h2 {
+            font-size: 1em;
+            margin-bottom: 15px;
+            color: #ccc;
+         }
+        .difficulty-button {
+             font-size: 1em;
+             padding: 10px 20px;
+             width: 200px;
+             margin-bottom: 8px;
+             box-shadow: 0 4px #888;
+        }
+        .difficulty-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #555;
+        }
+
+        /* Kontener Gry */
+        #game-container {
+            text-align: center;
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 5px solid #fff;
+            background-color: #000;
+            display: block;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            max-width: 95vw;
+            max-height: 80vh;
+            aspect-ratio: 2 / 1;
+        }
+        #game-container h1 {
+             margin-bottom: 15px;
+             font-size: 1.8em;
+        }
+        #score {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        #controls-info {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #bbb;
+            display: none;
+        }
+
+        /* Komunikat o końcu gry */
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3em;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            border: 2px solid #fff;
+        }
+        #message-box button {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7em;
+            padding: 12px 22px;
+            margin-top: 15px;
+            cursor: pointer;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s, transform 0.1s;
+            box-shadow: 0 4px #999;
+            margin: 5px;
+        }
+        #message-box button:hover {
+            background-color: #ddd;
+        }
+         #message-box button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #666;
+        }
+
+        /* Stopka i licznik */
+        footer {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.7em;
+            color: #aaa;
+        }
+        #visitor-counter {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.7em;
+            color: #aaa;
+            background-color: rgba(0,0,0,0.5);
+            padding: 5px 8px;
+            border-radius: 5px;
+        }
+
+        /* Dostosowanie dla mniejszych ekranów */
+        @media (max-width: 850px) {
+             #start-menu h1 { font-size: 2em; }
+             .menu-button { font-size: 1em; padding: 12px 25px; width: 200px;}
+             .difficulty-button { font-size: 0.9em; padding: 8px 18px; width: 180px;}
+             #game-container h1 { font-size: 1.5em; }
+             #score { font-size: 1.1em; }
+             #message-box { font-size: 1.1em; padding: 20px;}
+             #message-box button { font-size: 0.6em; padding: 10px 18px;}
+             #controls-info { font-size: 0.7em; }
+             footer, #visitor-counter { font-size: 0.6em; }
+        }
+         @media (max-width: 600px) {
+             #start-menu { padding: 25px; }
+             #start-menu h1 { font-size: 1.5em; margin-bottom: 20px;}
+             .menu-button { font-size: 0.9em; padding: 10px 20px; width: 180px;}
+             .difficulty-button { font-size: 0.8em; padding: 7px 15px; width: 160px;}
+             #game-container h1 { font-size: 1.2em; margin-bottom: 10px;}
+             #score { font-size: 1em; margin-bottom: 8px;}
+             #message-box { font-size: 1em; padding: 15px;}
+             #message-box button { font-size: 0.5em; padding: 8px 15px;}
+             #controls-info { font-size: 0.6em; }
+             footer, #visitor-counter { font-size: 0.5em; bottom: 5px; left: 5px; right: 5px; text-align: center;}
+             #visitor-counter { text-align: right; }
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <div id="start-menu">
+            <h1>Pong</h1>
+            <button id="one-player-button" class="menu-button">1 Gracz</button>
+            <div id="difficulty-selection">
+                <h2>Wybierz Poziom:</h2>
+                <button id="difficulty-easy" class="menu-button difficulty-button" data-difficulty="easy">Łatwy</button>
+                <button id="difficulty-normal" class="menu-button difficulty-button" data-difficulty="normal">Normalny</button>
+                <button id="difficulty-hard" class="menu-button difficulty-button" data-difficulty="hard">Trudny</button>
+            </div>
+            <button id="two-player-button" class="menu-button">2 Graczy</button>
+        </div>
+
+        <div id="game-container">
+            <h1>Pong</h1>
+            <div id="score">0 - 0</div>
+            <canvas id="pongCanvas"></canvas>
+            <div id="controls-info">Gracz 1: W/S | Gracz 2: ↑/↓</div>
+             <div id="message-box">
+                <p id="winner-message"></p>
+                <button id="restart-button">Zagraj Ponownie</button>
+                <button id="menu-button">Wróć do Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <span id="current-year"></span> pong.com.pl - Wszelkie prawa zastrzeżone.
+    </footer>
+    <div id="visitor-counter">Odwiedziny: <span id="visits">Ładowanie...</span></div>
+
+    <script>
+        // --- Ustawienie roku w stopce ---
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // --- Licznik odwiedzin (serwerowy PHP) ---
+        const visitsSpan = document.getElementById('visits');
+        // Funkcja do pobierania i aktualizowania licznika
+        function updateVisitorCount() {
+            fetch('counter.php') // Wywołaj skrypt PHP
+                .then(response => {
+                    if (!response.ok) {
+                        // Jeśli odpowiedź nie jest OK, spróbuj odczytać tekst błędu, jeśli jest
+                        return response.text().then(text => {
+                            throw new Error('Network response was not ok: ' + response.status + ' ' + response.statusText + '. Server said: ' + text);
+                        });
+                    }
+                    return response.text(); // Oczekujemy tekstu (liczby)
+                })
+                .then(count => {
+                    // Sprawdź, czy odpowiedź to faktycznie liczba
+                    if (!isNaN(parseInt(count))) {
+                        visitsSpan.textContent = count;
+                    } else {
+                        visitsSpan.textContent = 'Błąd danych';
+                        console.error('Otrzymano niepoprawną wartość licznika:', count);
+                    }
+                })
+                .catch(error => {
+                    console.error('Błąd pobierania licznika odwiedzin:', error);
+                    visitsSpan.textContent = 'Błąd';
+                });
+        }
+        // Wywołaj funkcję przy ładowaniu strony
+        updateVisitorCount();
+
+
+        // --- Elementy DOM ---
+        const startMenu = document.getElementById('start-menu');
+        const gameContainer = document.getElementById('game-container');
+        const onePlayerButton = document.getElementById('one-player-button');
+        const twoPlayerButton = document.getElementById('two-player-button');
+        const difficultySelection = document.getElementById('difficulty-selection');
+        const difficultyButtons = document.querySelectorAll('.difficulty-button');
+        const canvas = document.getElementById('pongCanvas');
+        const context = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const controlsInfo = document.getElementById('controls-info');
+        const messageBox = document.getElementById('message-box');
+        const winnerMessage = document.getElementById('winner-message');
+        const restartButton = document.getElementById('restart-button');
+        const menuButton = document.getElementById('menu-button');
+
+        // --- Ustawienia Gry ---
+        const baseWidth = 800;
+        const baseHeight = 400;
+        let scaleFactor = 1;
+        const winningScore = 5;
+
+        // --- Stan Gry ---
+        let gameMode = null;
+        let difficultyLevel = 'normal';
+        let gameRunning = false;
+        let animationFrameId = null;
+
+        // --- Parametry Trudności ---
+        const difficultySettings = {
+            easy:   { computerSpeed: 3, ballSpeed: 4, ballAcceleration: 0.05 },
+            normal: { computerSpeed: 4, ballSpeed: 5, ballAcceleration: 0.1 },
+            hard:   { computerSpeed: 6, ballSpeed: 6, ballAcceleration: 0.15 }
+        };
+
+        // --- Elementy Gry ---
+        const basePaddleWidth = 15;
+        const basePaddleHeight = 100;
+        const baseBallRadius = 10;
+        const basePlayerPaddleSpeed = 6;
+
+        let player1, player2, ball;
+        const keysPressed = { w: false, s: false, ArrowUp: false, ArrowDown: false };
+
+        // --- Funkcje Pomocnicze ---
+        function drawRect(x, y, w, h, color) { context.fillStyle = color; context.fillRect(x, y, w, h); }
+        function drawCircle(x, y, r, color) { context.fillStyle = color; context.beginPath(); context.arc(x, y, r, 0, Math.PI * 2, false); context.closePath(); context.fill(); }
+        function drawNet() {
+            context.strokeStyle = '#555'; context.lineWidth = 4 * scaleFactor;
+            context.setLineDash([10 * scaleFactor, 10 * scaleFactor]); context.beginPath();
+            context.moveTo(canvas.width / 2, 0); context.lineTo(canvas.width / 2, canvas.height);
+            context.stroke(); context.setLineDash([]);
+        }
+
+        function updateScore() {
+            if (!player1 || !player2) return;
+            let scoreText = '';
+            if (gameMode === 'single') {
+                scoreText = `Gracz: ${player1.score} - Komputer: ${player2.score} (${difficultyLevel.charAt(0).toUpperCase() + difficultyLevel.slice(1)})`;
+            } else if (gameMode === 'twoPlayer') {
+                scoreText = `Gracz 1: ${player1.score} - Gracz 2: ${player2.score}`;
+            }
+            scoreElement.textContent = scoreText;
+        }
+
+        function resetBall() {
+            if (!ball) return;
+            const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speed = currentDifficulty.ballSpeed * scaleFactor;
+            let angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
+            let directionX = (Math.random() > 0.5 ? 1 : -1);
+            let directionY = (Math.random() > 0.5 ? 1 : -1);
+            ball.velocityX = directionX * ball.speed * Math.cos(angle);
+            ball.velocityY = directionY * ball.speed * Math.sin(angle) + (Math.sign(directionY) || (Math.random() > 0.5 ? 1 : -1)) * scaleFactor;
+        }
+
+        function showEndGameMessage() {
+            if (!player1 || !player2) return;
+            let winnerName = '';
+            if (gameMode === 'single') {
+                winnerName = (player1.score >= winningScore) ? "Gracz" : "Komputer";
+            } else {
+                winnerName = (player1.score >= winningScore) ? "Gracz 1" : "Gracz 2";
+            }
+            winnerMessage.textContent = `${winnerName} Wygrywa!`;
+            messageBox.style.display = 'flex';
+            gameRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        function restartGame() {
+            if (!player1 || !player2 || !ball) return;
+            player1.score = 0;
+            player2.score = 0;
+            player1.y = canvas.height / 2 - player1.height / 2;
+            player2.y = canvas.height / 2 - player2.height / 2;
+            updateScore();
+            messageBox.style.display = 'none';
+            gameRunning = true;
+            resetBall();
+            if (!animationFrameId) { gameLoop(); }
+        }
+
+        function goToMenu() {
+            gameRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            gameContainer.style.display = 'none';
+            startMenu.style.display = 'block';
+            difficultySelection.style.display = 'none';
+            onePlayerButton.style.display = 'block';
+            twoPlayerButton.style.display = 'block';
+            messageBox.style.display = 'none';
+            removeGameEventListeners();
+            player1 = null; player2 = null; ball = null; gameMode = null;
+        }
+
+        // --- Logika Gry ---
+        function collision(b, p) {
+            if (!b || !p) return false;
+            const p_top = p.y; const p_bottom = p.y + p.height;
+            const p_left = p.x; const p_right = p.x + p.width;
+            const b_top = b.y - b.radius; const b_bottom = b.y + b.radius;
+            const b_left = b.x - b.radius; const b_right = b.x + b.radius;
+            return b_right > p_left && b_left < p_right && b_bottom > p_top && b_top < p_bottom;
+         }
+
+        function update() {
+            if (!gameRunning || !player1 || !player2 || !ball) return;
+
+            if (gameMode === 'single') {
+                let targetY = ball.y - player2.height / 2;
+                let dy = targetY - player2.y;
+                let currentComputerSpeed = player2.speed;
+                if (Math.abs(ball.x - player2.x) > canvas.width * 0.65) {
+                    currentComputerSpeed *= 0.75;
+                }
+                if (Math.abs(dy) > currentComputerSpeed) {
+                    player2.y += Math.sign(dy) * currentComputerSpeed;
+                } else {
+                    player2.y = targetY;
+                }
+                player2.y = Math.max(0, Math.min(canvas.height - player2.height, player2.y));
+            } else if (gameMode === 'twoPlayer') {
+                const paddleSpeed = basePlayerPaddleSpeed * scaleFactor;
+                if (keysPressed.w && player1.y > 0) { player1.y -= paddleSpeed; }
+                if (keysPressed.s && player1.y < canvas.height - player1.height) { player1.y += paddleSpeed; }
+                player1.y = Math.max(0, Math.min(canvas.height - player1.height, player1.y));
+
+                if (keysPressed.ArrowUp && player2.y > 0) { player2.y -= paddleSpeed; }
+                if (keysPressed.ArrowDown && player2.y < canvas.height - player2.height) { player2.y += paddleSpeed; }
+                player2.y = Math.max(0, Math.min(canvas.height - player2.height, player2.y));
+            }
+
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+
+            if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.velocityY *= -1; }
+            else if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.velocityY *= -1; }
+            if (Math.abs(ball.velocityY) < 0.1 * scaleFactor) { ball.velocityY += (Math.random() - 0.5) * 0.5 * scaleFactor; }
+
+            let pointScored = false;
+            if (ball.x + ball.radius > canvas.width) { player1.score++; pointScored = true; }
+            else if (ball.x - ball.radius < 0) { player2.score++; pointScored = true; }
+
+            if(pointScored) {
+                updateScore();
+                if (player1.score >= winningScore || player2.score >= winningScore) {
+                    showEndGameMessage();
+                } else {
+                    resetBall();
+                }
+            }
+
+            let paddle = (ball.x < canvas.width / 2) ? player1 : player2;
+            if (collision(ball, paddle)) {
+                let collidePoint = (ball.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
+                const maxAngleRatio = 0.8;
+                collidePoint = Math.max(-maxAngleRatio, Math.min(maxAngleRatio, collidePoint));
+                let angleRad = collidePoint * (Math.PI / 3);
+                let direction = (ball.x < canvas.width / 2) ? 1 : -1;
+                ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+                ball.velocityY = ball.speed * Math.sin(angleRad);
+                const minYVelocity = 0.5 * scaleFactor;
+                if (Math.abs(ball.velocityY) < minYVelocity) {
+                    ball.velocityY = (Math.sign(ball.velocityY) || (Math.random() > 0.5 ? 1 : -1)) * minYVelocity;
+                }
+                ball.x += ball.velocityX * 0.1;
+                 const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
+                 ball.speed += currentDifficulty.ballAcceleration * scaleFactor;
+            }
+        }
+
+        function render() {
+             if (!player1 || !player2 || !ball) return;
+            drawRect(0, 0, canvas.width, canvas.height, '#000');
+            drawNet();
+            drawRect(player1.x, player1.y, player1.width, player1.height, player1.color);
+            drawRect(player2.x, player2.y, player2.width, player2.height, player2.color);
+            drawCircle(ball.x, ball.y, ball.radius, ball.color);
+         }
+
+        function gameLoop(timestamp) {
+            if (!gameRunning) {
+                animationFrameId = null;
+                return;
+            }
+            update();
+            render();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- Obsługa Inputu ---
+        function movePlayer1Paddle(evt) {
+             if (!player1 || gameMode !== 'single') return;
+            let rect = canvas.getBoundingClientRect();
+            let mouseY = evt.clientY;
+            if (evt.touches && evt.touches.length > 0) {
+                 evt.preventDefault();
+                 mouseY = evt.touches[0].clientY;
+            }
+            player1.y = mouseY - rect.top - player1.height / 2;
+            player1.y = Math.max(0, Math.min(canvas.height - player1.height, player1.y));
+         }
+        function handleKeyDown(event) {
+            if (gameMode !== 'twoPlayer') return;
+            switch(event.key) {
+                case 'w': case 'W': keysPressed.w = true; break;
+                case 's': case 'S': keysPressed.s = true; break;
+                case 'ArrowUp': keysPressed.ArrowUp = true; break;
+                case 'ArrowDown': keysPressed.ArrowDown = true; break;
+            }
+         }
+        function handleKeyUp(event) {
+             if (gameMode !== 'twoPlayer') return;
+            switch(event.key) {
+                case 'w': case 'W': keysPressed.w = false; break;
+                case 's': case 'S': keysPressed.s = false; break;
+                case 'ArrowUp': keysPressed.ArrowUp = false; break;
+                case 'ArrowDown': keysPressed.ArrowDown = false; break;
+            }
+         }
+
+        function addGameEventListeners() {
+            removeGameEventListeners();
+            if (gameMode === 'single') {
+                canvas.style.cursor = 'none';
+                canvas.addEventListener('mousemove', movePlayer1Paddle);
+                canvas.addEventListener('touchmove', movePlayer1Paddle, { passive: false });
+            } else if (gameMode === 'twoPlayer') {
+                 canvas.style.cursor = 'default';
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
+                controlsInfo.style.display = 'block';
+            }
+            window.addEventListener('resize', resizeGame);
+         }
+        function removeGameEventListeners() {
+            canvas.removeEventListener('mousemove', movePlayer1Paddle);
+            canvas.removeEventListener('touchmove', movePlayer1Paddle);
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('resize', resizeGame);
+            controlsInfo.style.display = 'none';
+             canvas.style.cursor = 'default';
+         }
+
+        function resizeGame() {
+            if (!gameMode) return;
+
+            const container = document.getElementById('game-container');
+            if (!container) return;
+            const availableWidth = container.clientWidth * 0.95;
+            const availableHeight = window.innerHeight * 0.7;
+            const scaleWidth = availableWidth / baseWidth;
+            const scaleHeight = availableHeight / baseHeight;
+            scaleFactor = Math.min(scaleWidth, scaleHeight);
+
+            canvas.width = baseWidth * scaleFactor;
+            canvas.height = baseHeight * scaleFactor;
+
+            const scaledPaddleWidth = basePaddleWidth * scaleFactor;
+            const scaledPaddleHeight = basePaddleHeight * scaleFactor;
+            const scaledBallRadius = baseBallRadius * scaleFactor;
+
+            const currentDifficulty = difficultySettings[difficultyLevel] || difficultySettings.normal;
+            const scaledComputerSpeed = currentDifficulty.computerSpeed * scaleFactor;
+            const scaledBallSpeed = currentDifficulty.ballSpeed * scaleFactor;
+
+            const score1 = player1 ? player1.score : 0;
+            const score2 = player2 ? player2.score : 0;
+
+            player1 = {
+                x: 10 * scaleFactor, y: canvas.height / 2 - scaledPaddleHeight / 2,
+                width: scaledPaddleWidth, height: scaledPaddleHeight, color: '#FFF', score: score1
+            };
+
+            player2 = {
+                x: canvas.width - scaledPaddleWidth - (10 * scaleFactor), y: canvas.height / 2 - scaledPaddleHeight / 2,
+                width: scaledPaddleWidth, height: scaledPaddleHeight, color: '#FFF', score: score2,
+                speed: (gameMode === 'single') ? scaledComputerSpeed : 0
+            };
+
+            if (ball) {
+                 const oldCanvasWidth = canvas.width / scaleFactor * (ball.scaleFactor || 1);
+                 const oldCanvasHeight = canvas.height / scaleFactor * (ball.scaleFactor || 1);
+                 ball.x = (ball.x / oldCanvasWidth) * canvas.width;
+                 ball.y = (ball.y / oldCanvasHeight) * canvas.height;
+                 ball.radius = scaledBallRadius;
+                 const currentAbsSpeed = Math.sqrt(ball.velocityX**2 + ball.velocityY**2);
+                 const speedRatio = (scaledBallSpeed * (ball.speed / (currentDifficulty.ballSpeed * (ball.scaleFactor || 1)))) / (currentAbsSpeed || 1);
+                 ball.speed *= speedRatio;
+                 ball.velocityX *= speedRatio;
+                 ball.velocityY *= speedRatio;
+                 ball.scaleFactor = scaleFactor;
+            } else {
+                 ball = {
+                     x: canvas.width / 2, y: canvas.height / 2, radius: scaledBallRadius,
+                     speed: scaledBallSpeed, velocityX: 0, velocityY: 0, color: '#FFF', scaleFactor: scaleFactor
+                 };
+                 resetBall();
+            }
+
+            updateScore();
+            if (gameRunning) { render(); }
+        }
+
+        function startGame(selectedMode, selectedDifficulty = 'normal') {
+            gameMode = selectedMode;
+            difficultyLevel = selectedDifficulty;
+
+            startMenu.style.display = 'none';
+            gameContainer.style.display = 'flex';
+
+            player1 = null; player2 = null; ball = null;
+            keysPressed.w = false; keysPressed.s = false; keysPressed.ArrowUp = false; keysPressed.ArrowDown = false;
+
+            resizeGame();
+            addGameEventListeners();
+            gameRunning = true;
+            if (!animationFrameId) { gameLoop(); }
+        }
+
+        // --- Nasłuchiwanie Zdarzeń Menu ---
+        onePlayerButton.addEventListener('click', () => {
+            difficultySelection.style.display = 'block';
+            onePlayerButton.style.display = 'none';
+            twoPlayerButton.style.display = 'none';
+        });
+
+        difficultyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const selectedDifficulty = button.getAttribute('data-difficulty');
+                startGame('single', selectedDifficulty);
+            });
+        });
+
+        twoPlayerButton.addEventListener('click', () => {
+             difficultySelection.style.display = 'none';
+             startGame('twoPlayer');
+        });
+
+        restartButton.addEventListener('click', restartGame);
+        menuButton.addEventListener('click', goToMenu);
+
+        // Stan początkowy
+        gameContainer.style.display = 'none';
+        startMenu.style.display = 'block';
+        difficultySelection.style.display = 'none';
+
+    </script>
+</body>
+</html>
