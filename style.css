@@ -1,0 +1,211 @@
+/* style.css - Style dla Gry Pong */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #202020;
+    margin: 0;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative; /* Dla pozycjonowania licznika i stopki */
+}
+/* Kontener główny */
+#main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 80px; /* Zwiększony padding na stopkę, wersję i licznik */
+}
+
+/* Menu Startowe */
+#start-menu {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 40px;
+    border-radius: 15px;
+    border: 3px solid #fff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+    min-width: 300px;
+}
+#start-menu h1 {
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+.menu-button {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2em;
+    padding: 15px 30px;
+    margin: 10px auto;
+    cursor: pointer;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s, transform 0.1s;
+    box-shadow: 0 5px #999;
+    display: block;
+    width: 250px;
+}
+.menu-button:hover {
+    background-color: #ddd;
+}
+.menu-button:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px #666;
+}
+#difficulty-selection {
+    margin-top: 20px;
+    display: none;
+}
+ #difficulty-selection h2 {
+    font-size: 1em;
+    margin-bottom: 15px;
+    color: #ccc;
+ }
+.difficulty-button {
+     font-size: 1em;
+     padding: 10px 20px;
+     width: 200px;
+     margin-bottom: 8px;
+     box-shadow: 0 4px #888;
+}
+.difficulty-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px #555;
+}
+
+/* Kontener Gry */
+#game-container {
+    text-align: center;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+canvas {
+    border: 5px solid #fff;
+    background-color: #000;
+    display: block;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    max-width: 95vw;
+    max-height: 80vh;
+    aspect-ratio: 2 / 1;
+}
+#game-container h1 {
+     margin-bottom: 15px;
+     font-size: 1.8em;
+}
+#score {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+}
+#controls-info {
+    margin-top: 10px;
+    font-size: 0.8em;
+    color: #bbb;
+    display: none;
+}
+
+/* Komunikat o końcu gry */
+#message-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.3em;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+    border: 2px solid #fff;
+}
+#message-box button {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.7em;
+    padding: 12px 22px;
+    margin-top: 15px;
+    cursor: pointer;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s, transform 0.1s;
+    box-shadow: 0 4px #999;
+    margin: 5px;
+}
+#message-box button:hover {
+    background-color: #ddd;
+}
+ #message-box button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px #666;
+}
+
+/* Stopka, wersja i licznik */
+footer {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-size: 0.7em;
+    color: #aaa;
+    z-index: 5;
+}
+#game-version {
+    position: fixed;
+    bottom: 30px; /* Wyżej niż licznik */
+    right: 10px;
+    font-size: 0.6em;
+    color: #888;
+    background-color: rgba(0,0,0,0.4);
+    padding: 3px 6px;
+    border-radius: 3px;
+    z-index: 5;
+}
+#visitor-counter {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.7em;
+    color: #aaa;
+    background-color: rgba(0,0,0,0.5);
+    padding: 5px 8px;
+    border-radius: 5px;
+    z-index: 5;
+}
+
+@media (max-width: 850px) {
+     #start-menu h1 { font-size: 2em; }
+     .menu-button { font-size: 1em; padding: 12px 25px; width: 200px;}
+     .difficulty-button { font-size: 0.9em; padding: 8px 18px; width: 180px;}
+     #game-container h1 { font-size: 1.5em; }
+     #score { font-size: 1.1em; }
+     #message-box { font-size: 1.1em; padding: 20px;}
+     #message-box button { font-size: 0.6em; padding: 10px 18px;}
+     #controls-info { font-size: 0.7em; }
+     footer, #visitor-counter, #game-version { font-size: 0.6em; }
+     #game-version { bottom: 25px; }
+}
+ @media (max-width: 600px) {
+     #start-menu { padding: 25px; }
+     #start-menu h1 { font-size: 1.5em; margin-bottom: 20px;}
+     .menu-button { font-size: 0.9em; padding: 10px 20px; width: 180px;}
+     .difficulty-button { font-size: 0.8em; padding: 7px 15px; width: 160px;}
+     #game-container h1 { font-size: 1.2em; margin-bottom: 10px;}
+     #score { font-size: 1em; margin-bottom: 8px;}
+     #message-box { font-size: 1em; padding: 15px;}
+     #message-box button { font-size: 0.5em; padding: 8px 15px;}
+     #controls-info { font-size: 0.6em; }
+     footer { font-size: 0.5em; bottom: 5px; left: 5px; right: 5px; text-align: center;}
+     #game-version { font-size: 0.4em; bottom: 20px; right: 5px; text-align: right;}
+     #visitor-counter { font-size: 0.5em; bottom: 5px; right: 5px; text-align: right;}
+}
