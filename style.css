@@ -10,7 +10,7 @@ body {
     color: #fff;
     flex-direction: column;
     overflow: hidden;
-    position: relative; /* Dla pozycjonowania licznika i stopki */
+    position: relative; /* Dla pozycjonowania elementów fixed */
 }
 /* Kontener główny */
 #main-container {
@@ -18,7 +18,7 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding-bottom: 80px; /* Zwiększony padding na stopkę, wersję i licznik */
+    /* Usunięto padding-bottom, elementy fixed są pozycjonowane względem viewportu */
 }
 
 /* Menu Startowe */
@@ -93,7 +93,7 @@ canvas {
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
     border-radius: 10px;
     max-width: 95vw;
-    max-height: 80vh;
+    max-height: 90vh; /* Zwiększono trochę, jeśli stopka jest niżej */
     aspect-ratio: 2 / 1;
 }
 #game-container h1 {
@@ -151,18 +151,25 @@ canvas {
     box-shadow: 0 2px #666;
 }
 
-/* Stopka, wersja i licznik */
+/* Stopka, wersja i licznik - ZAKTUALIZOWANE POZYCJE */
 footer {
     position: fixed;
-    bottom: 10px;
+    bottom: 10px; /* Obniżono */
     left: 10px;
     font-size: 0.7em;
     color: #aaa;
     z-index: 5;
 }
+.footer-link {
+    color: #ccc;
+    text-decoration: none;
+}
+.footer-link:hover {
+    text-decoration: underline;
+}
 #game-version {
     position: fixed;
-    bottom: 30px; /* Wyżej niż licznik */
+    bottom: 28px; /* Obniżono, aby było nad licznikiem */
     right: 10px;
     font-size: 0.6em;
     color: #888;
@@ -173,7 +180,7 @@ footer {
 }
 #visitor-counter {
     position: fixed;
-    bottom: 10px;
+    bottom: 10px; /* Obniżono */
     right: 10px;
     font-size: 0.7em;
     color: #aaa;
@@ -182,6 +189,47 @@ footer {
     border-radius: 5px;
     z-index: 5;
 }
+
+/* Baner Cookies */
+#cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    z-index: 1000; /* Na samym wierzchu */
+    font-size: 0.8em;
+    display: none; /* Domyślnie ukryty, pokazywany przez JS */
+}
+#cookie-consent-banner p {
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+#cookie-consent-banner a {
+    color: #4e9af1;
+    text-decoration: underline;
+}
+#accept-cookies-button {
+    font-family: 'Press Start 2P', cursive;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 0.9em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+#accept-cookies-button:hover {
+    background-color: #45a049;
+}
+
 
 @media (max-width: 850px) {
      #start-menu h1 { font-size: 2em; }
@@ -193,7 +241,12 @@ footer {
      #message-box button { font-size: 0.6em; padding: 10px 18px;}
      #controls-info { font-size: 0.7em; }
      footer, #visitor-counter, #game-version { font-size: 0.6em; }
-     #game-version { bottom: 25px; }
+     #game-version { bottom: 25px; } /* Dostosowanie pozycji */
+     #visitor-counter { bottom: 8px; }
+     footer { bottom: 8px; }
+     #cookie-consent-banner { font-size: 0.7em; padding: 10px; }
+     #accept-cookies-button { font-size: 0.8em; padding: 6px 12px;}
+
 }
  @media (max-width: 600px) {
      #start-menu { padding: 25px; }
@@ -205,7 +258,32 @@ footer {
      #message-box { font-size: 1em; padding: 15px;}
      #message-box button { font-size: 0.5em; padding: 8px 15px;}
      #controls-info { font-size: 0.6em; }
-     footer { font-size: 0.5em; bottom: 5px; left: 5px; right: 5px; text-align: center;}
-     #game-version { font-size: 0.4em; bottom: 20px; right: 5px; text-align: right;}
-     #visitor-counter { font-size: 0.5em; bottom: 5px; right: 5px; text-align: right;}
+     /* Na bardzo małych ekranach, stopka i licznik/wersja mogą być problematyczne w jednym rzędzie */
+     /* Stopka na środku */
+     footer {
+        font-size: 0.5em;
+        bottom: 25px; /* Wyżej, aby zrobić miejsce na wersję i licznik poniżej */
+        left: 0;
+        right: 0;
+        text-align: center;
+        width: 100%;
+    }
+    /* Wersja i licznik obok siebie na dole */
+    #game-version {
+        font-size: 0.4em;
+        bottom: 8px;
+        left: 10px; /* Wersja po lewej */
+        right: auto;
+        text-align: left;
+    }
+    #visitor-counter {
+        font-size: 0.5em;
+        bottom: 8px;
+        right: 10px; /* Licznik po prawej */
+        left: auto;
+        text-align: right;
+    }
+     #cookie-consent-banner { font-size: 0.6em; padding: 8px; }
+     #cookie-consent-banner p { margin-bottom: 8px; }
+     #accept-cookies-button { font-size: 0.7em; padding: 5px 10px;}
 }
